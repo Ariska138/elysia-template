@@ -14,6 +14,8 @@ export const app = new Elysia()
     name: 'jwt',
     secret: process.env.JWT_SECRET!
   }))
+  // Fungsi 'derive' ini akan berjalan di setiap request untuk memverifikasi cookie JWT
+  // dan menambahkan 'currentUser' ke dalam konteks.
   .derive(async ({ jwt, cookie }): Promise<{ currentUser: User | null }> => {
     const authCookie = cookie.auth;
     if (!authCookie) return { currentUser: null };
@@ -25,21 +27,17 @@ export const app = new Elysia()
 
     return { currentUser: user };
   })
-  .use(isAuthenticated) // <-- Pindahkan plugin ke sini
+  // Rute otentikasi tidak memerlukan perlindungan
   .use(authRoutes)
+  // Rute finansial sudah dilindungi di dalam filenya sendiri (finance.route.ts)
   .use(financeRoutes)
   .group('/users', app => app
-    // .use(isAuthenticated) // <-- Hapus dari sini
+    // Terapkan plugin HANYA pada grup rute yang memerlukan otentikasi.
+    .use(isAuthenticated)
     .get('/me', ({ currentUser }) => {
-      if (!currentUser) {
-        return new Response(
-          JSON.stringify({ error: 'Unauthorized' }),
-          {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' }
-          }
-        );
-      }
+      // Tidak perlu lagi memeriksa `currentUser` di sini,
+      // karena plugin 'isAuthenticated' sudah menjalankannya.
+      // Jika kode ini berjalan, 'currentUser' dijamin ada.
       return currentUser;
     })
   );

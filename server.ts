@@ -5,12 +5,11 @@ import { openapi } from '@elysiajs/openapi'
 let server = app;
 
 if (process.env.NODE_ENV !== 'production') {
+  server.use(openapi())
   server = server.use(swagger({
     path: '/swagger',
     documentation: { info: { title: 'Elysia API', version: '1.0.0' } }
   }));
-
-  // server = server.use(openapi());
 
   const devApp = server.listen(3000);
   console.log(`🦊 Elysia is running at http://localhost:${devApp.server?.port}`);
